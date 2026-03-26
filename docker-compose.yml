@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: chat_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: chat_db
+      MYSQL_USER: chatuser
+      MYSQL_PASSWORD: chatpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+    networks:
+      - chat_network
+
+  # Express Backend
+  backend:
+    build: .
+    container_name: chat_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: mysql://chatuser:chatpass@mysql:3306/chat_db
+      JWT_SECRET: dev-secret-key-change-in-production-12345678
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-87654321
+      PORT: 3000
+      FRONTEND_URL: http://localhost:5173
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    command: npm run dev
+    networks:
+      - chat_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  chat_network:
+    driver: bridge
