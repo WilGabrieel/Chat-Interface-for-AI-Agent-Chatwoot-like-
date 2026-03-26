@@ -1,0 +1,58 @@
+{
+  "project_name": "ChatwootAI Interface",
+  "project_type": "web_application",
+  "created_at": "2026-03-26T00:00:00Z",
+
+  "workflow_preferences": {
+    "granularity": "coarse",
+    "phase_count": 5,
+    "execution_mode": "parallel",
+    "commit_planning_docs": true
+  },
+
+  "agent_preferences": {
+    "research_enabled": true,
+    "plan_verification_enabled": true,
+    "researcher_model": "sonnet",
+    "planner_model": "sonnet",
+    "executor_model": "sonnet"
+  },
+
+  "technical_stack": {
+    "frontend": {
+      "framework": "React 18+",
+      "build_tool": "Vite",
+      "ui_library": "TBD_after_research",
+      "real_time": "Socket.io",
+      "state_management": "Zustand"
+    },
+    "backend": {
+      "runtime": "Node.js",
+      "framework": "Express",
+      "database": "MySQL",
+      "orm": "Prisma",
+      "auth": "JWT",
+      "real_time": "Socket.io"
+    },
+    "infrastructure": {
+      "hosting": "Railway",
+      "containerization": "Docker",
+      "version_control": "Git"
+    }
+  },
+
+  "timeline": {
+    "total_duration_weeks": 4,
+    "phase_1_duration": "1 week",
+    "phase_2_duration": "1.5 weeks",
+    "phase_3_duration": "1.5 weeks",
+    "phase_4_duration": "1 week",
+    "phase_5_duration": "1 week"
+  },
+
+  "team": {
+    "product_owner": "user",
+    "supervisors_count": 2,
+    "initial_users": 2
+  }
+}
