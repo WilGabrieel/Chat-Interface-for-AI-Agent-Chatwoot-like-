@@ -12,12 +12,13 @@ const prisma = new PrismaClient();
  * Register a new user
  * POST /auth/register
  */
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     const { email, password, name, role = 'supervisor' } = req.body;
@@ -28,7 +29,8 @@ export const register = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Email already registered' });
+      res.status(409).json({ error: 'Email already registered' });
+      return;
     }
 
     // Hash password with bcrypt
@@ -95,12 +97,13 @@ export const register = async (req: Request, res: Response) => {
  * Login user
  * POST /auth/login
  */
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     const { email, password } = req.body;
@@ -112,7 +115,8 @@ export const login = async (req: Request, res: Response) => {
 
     if (!user) {
       // Don't reveal if email exists (security best practice)
-      return res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
 
     // Compare provided password with stored hash
@@ -120,7 +124,8 @@ export const login = async (req: Request, res: Response) => {
 
     if (!passwordMatch) {
       // Still return generic error message
-      return res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
 
     // Generate JWT access token (24 hour expiry)
@@ -173,12 +178,13 @@ export const login = async (req: Request, res: Response) => {
  * Refresh access token using refresh token
  * POST /auth/refresh
  */
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken: providedToken } = req.body;
 
     if (!providedToken) {
-      return res.status(400).json({ error: 'Refresh token required' });
+      res.status(400).json({ error: 'Refresh token required' });
+      return;
     }
 
     // Verify refresh token signature
@@ -186,7 +192,8 @@ export const refresh = async (req: Request, res: Response) => {
     try {
       decoded = jwt.verify(providedToken, config.JWT_REFRESH_SECRET);
     } catch (error) {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      res.status(401).json({ error: 'Invalid refresh token' });
+      return;
     }
 
     // Check if refresh token exists in database (enables revocation)
@@ -195,12 +202,14 @@ export const refresh = async (req: Request, res: Response) => {
     });
 
     if (!storedToken) {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      res.status(401).json({ error: 'Invalid refresh token' });
+      return;
     }
 
     // Check if token has expired
     if (new Date() > storedToken.expiresAt) {
-      return res.status(401).json({ error: 'Refresh token expired' });
+      res.status(401).json({ error: 'Refresh token expired' });
+      return;
     }
 
     // Get user
@@ -209,7 +218,8 @@ export const refresh = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      res.status(401).json({ error: 'User not found' });
+      return;
     }
 
     // Generate new access token (24 hour expiry)

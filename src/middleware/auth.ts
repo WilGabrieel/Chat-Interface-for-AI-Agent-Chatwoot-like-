@@ -11,13 +11,14 @@ export const verifyToken = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(' ')[1]; // Bearer {token}
 
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+      res.status(401).json({ error: 'No token provided' });
+      return;
     }
 
     const decoded = jwt.verify(token, config.JWT_SECRET);
@@ -25,9 +26,10 @@ export const verifyToken = (
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({ error: 'Token expired' });
+      res.status(401).json({ error: 'Token expired' });
+      return;
     }
-    return res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid token' });
   }
 };
 
