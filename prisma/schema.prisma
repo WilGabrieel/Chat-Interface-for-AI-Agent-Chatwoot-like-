@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and authorization
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  passwordHash String
+  name      String
+  role      String   // "admin" or "supervisor"
+  conversations Conversation[]
+  refreshTokens RefreshToken[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+// Contact model for WhatsApp contacts
+model Contact {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  name      String
+  avatarUrl String?
+  tags      Json     @default("[]")  // Array of tags
+  conversations Conversation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+}
+
+// Conversation model for chat conversations
+model Conversation {
+  id            String   @id @default(cuid())
+  contactId     String
+  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  assignedToId  String?
+  assignedTo    User?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  status        String   @default("active") // "active", "closed", "paused"
+  messages      Message[]
+  lastMessageAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+// Message model for individual messages
+model Message {
+  id              String   @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          String   // "user_id", "agent", "contact"
+  content         String   @db.LongText
+  messageType     String   @default("text") // "text", "image", "file"
+  metadata        Json?    // { confidence: number, intent: string, etc }
+  readAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@index([sender])
+}
+
+// DailyInsight model for daily statistics
+model DailyInsight {
+  id              String   @id @default(cuid())
+  date            DateTime @unique
+  totalMessages   Int
+  errorRate       Float    // 0.0 to 1.0
+  avgResponseTime Float    // seconds
+  topErrors       Json     // Array of { type: string, count: number }
+  createdAt       DateTime @default(now())
+
+  @@index([date])
+}
+
+// RefreshToken model for token rotation and revocation
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
